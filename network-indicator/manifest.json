@@ -3,10 +3,10 @@
     "name": "NetworkIndicator",
     "version": "0.0.1",
     "minNoctaliaVersion": "3.6.0",
-    "author": "tongineer",
+    "author": "tonigineer",
     "license": "MIT",
     "repository": "https://github.com/tonigineer/noctalia-plugins",
-    "description": "A more prettier network speed indicator.",
+    "description": "A lively network speed indicator for RX/TX traffic.",
     "entryPoints": {
         "barWidget": "BarWidget.qml",
         "settings": "Settings.qml"
@@ -19,9 +19,12 @@
             "arrowType": "caret",
             "byteThresholdActive": 1024,
             "fontSizeModifier": 0.75,
+            "forceMegabytes": false,
             "iconSizeModifier": 1.0,
             "minWidth": 0,
-            "spacingInbetween": 0
+            "showNumbers": false,
+            "spacingInbetween": 0,
+            "useCustomColors": false
         }
     }
 }

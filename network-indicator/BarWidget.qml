@@ -14,38 +14,37 @@ Rectangle {
     property string widgetId: ""
     property string section: ""
 
-    // Plugin configuration
-    readonly property var cfg:      pluginApi?.pluginSettings                      || ({})
-    readonly property var defaults: pluginApi?.manifest?.metadata?.defaultSettings || ({})
+    // ---------- Configuration ----------
 
-    readonly property color  bgColor:               cfg.backgroundColor     || defaults.backgroundColor         || "transparent"
+    property var cfg: pluginApi?.pluginSettings || ({})
+    property var defaults: pluginApi?.manifest?.metadata?.defaultSettings || ({})
 
-    readonly property string arrowType:             cfg.arrowType           || defaults.arrowType               || "arrow"
-    readonly property int    minWidth:              cfg.minWidth            || defaults.minWidth                || 0
+    property string arrowType: cfg.arrowType || defaults.arrowType
+    property int minWidth: cfg.minWidth || defaults.minWidth
 
-    readonly property color  colorSilent:           cfg.colorSilent         || defaults.colorSilent             || Color.mSurfaceVariant
-    readonly property color  colorTx:               cfg.colorTx             || defaults.colorTx                 || Color.mSecondary
-    readonly property color  colorRx:               cfg.colorRx             || defaults.colorRx                 || Color.mPrimary
-    readonly property color  colorText:             cfg.colorText           || defaults.colorText               || Qt.alpha(Color.mOnSurfaceVariant, 0.3)
+    property bool useCustomColors: cfg.useCustomColors || defaults.useCustomColors
+    property bool showNumbers: cfg.showNumbers || defaults.showNumbers
+    property bool forceMegabytes: cfg.forceMegabytes || defaults.forceMegabytes
 
-    readonly property int    byteThresholdActive:   cfg.byteThresholdActive || defaults.byteThresholdActive     || 1024
-    readonly property real   fontSizeModifier:      cfg.fontSizeModifier    || defaults.fontSizeModifier        || 0.75
-    readonly property real   iconSizeModifier:      cfg.iconSizeModifier    || defaults.iconSizeModifier        || 1.0
-    readonly property real   spacingInbetween:      cfg.spacingInbetween    || defaults.spacingInbetween        || 0.0
+    property color colorSilent: root.useCustomColors && (cfg.colorSilent || defaults.colorSilent) || Color.mSurfaceVariant
+    property color colorTx: cfg.colorTx || defaults.colorTx || Color.mSecondary
+    property color colorRx: cfg.colorRx || defaults.colorRx || Color.mPrimary
+    property color colorText: cfg.colorText || defaults.colorText || Qt.alpha(Color.mOnSurfaceVariant, 0.3)
 
-    // Bar positioning properties
-    readonly property string barPosition: Settings.data.bar.position || "top"
-    readonly property bool   barIsVertical: barPosition === "left" || barPosition === "right"
+    property int byteThresholdActive: cfg.byteThresholdActive || defaults.byteThresholdActive
+    property real fontSizeModifier: cfg.fontSizeModifier || defaults.fontSizeModifier
+    property real iconSizeModifier: cfg.iconSizeModifier || defaults.iconSizeModifier
+    property real spacingInbetween: cfg.spacingInbetween || defaults.spacingInbetween
 
-    implicitWidth:  barIsVertical
-                    ? Style.barHeight
-                    : Math.max(contentRow.implicitWidth, minWidth)
+    property string barPosition: Settings.data.bar.position || "top"
+    property bool barIsVertical: barPosition === "left" || barPosition === "right"
+
+    color: cfg.backgroundColor || defaults.backgroundColor || "transparent"
+    implicitWidth: barIsVertical ? Style.barHeight : Math.max(contentRow.implicitWidth, minWidth)
     implicitHeight: Style.barHeight
 
-    color: bgColor
-    radius: !barIsVertical ? Style.radiusM : width * 0.5
+    // ---------- Widget ----------
 
-    // Widget
     property real txSpeed: SystemStatService.txSpeed
     property real rxSpeed: SystemStatService.rxSpeed
 
@@ -55,6 +54,7 @@ Rectangle {
         spacing: Style.marginS
 
         Column {
+            visible: root.showNumbers
             spacing: root.spacingInbetween
 
             NText {
@@ -81,55 +81,36 @@ Rectangle {
 
             NIcon {
                 icon: arrowType + "-up"
-                color: root.txSpeed > root.byteThresholdActive
-                       ? root.colorTx
-                       : root.colorSilent
+                color: root.txSpeed > root.byteThresholdActive ? root.colorTx : root.colorSilent
                 pointSize: Style.fontSizeL * root.iconSizeModifier
             }
 
             NIcon {
                 icon: arrowType + "-down"
-                color: root.rxSpeed > root.byteThresholdActive
-                       ? root.colorRx
-                       : root.colorSilent
+                color: root.rxSpeed > root.byteThresholdActive ? root.colorRx : root.colorSilent
                 pointSize: Style.fontSizeL * root.iconSizeModifier
             }
         }
     }
 
-    // Mouse area to open panel
-    MouseArea {
-        anchors.fill: parent
-        hoverEnabled: true
-        cursorShape: Qt.PointingHandCursor
-
-        onEntered:  root.color = Qt.lighter(root.bgColor, 1.1)
-        onExited:   root.color = root.bgColor
-
-        onClicked: {
-            if (pluginApi) {
-                Logger.i("NetworkIndicator", "Opening Panel for Network Indicator, maybe soon ...")
-                pluginApi.openPanel(root.screen)
-            }
-        }
-    }
+    // ---------- Utilities ----------
 
     function convertBytes(bytesPerSecond) {
-        const KB = 1024
-        const MB = KB * 1024
+        const KB = 1024;
+        const MB = KB * 1024;
 
-        let value
-        let unit
+        let value;
+        let unit;
 
-        if (bytesPerSecond < MB) {
-            value = bytesPerSecond / KB
-            unit = "KB"
+        if ((bytesPerSecond < MB) & !root.forceMegabytes) {
+            value = bytesPerSecond / KB;
+            unit = "KB";
         } else {
-            value = bytesPerSecond / MB
-            unit = "MB"
+            value = bytesPerSecond / MB;
+            unit = "MB";
         }
 
-        const text = value.toFixed(1) + " " + unit
-        return text.padStart(9, " ")
+        const text = value.toFixed(1) + " " + unit;
+        return text.padStart(9, " ");
     }
 }

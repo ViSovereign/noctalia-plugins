@@ -8,258 +8,290 @@ ColumnLayout {
 
     readonly property int labelPadding: 15
 
-    property var pluginApi:             null
+    property var pluginApi: null
 
-    readonly property var cfg:          pluginApi?.pluginSettings                               || ({})
-    readonly property var defaults:     pluginApi?.manifest?.metadata?.defaultSettings          || ({})
+    property var cfg: pluginApi?.pluginSettings || ({})
+    property var defaults: pluginApi?.manifest?.metadata?.defaultSettings || ({})
 
-    property string arrowType:          cfg.arrowType           || defaults.arrowType           || "arrow"
-    property int  minWidth:             cfg.minWidth            || defaults.minWidth            || 0
+    property string arrowType: cfg.arrowType || defaults.arrowType
+    property int minWidth: cfg.minWidth || defaults.minWidth
 
-    property color colorSilent:         cfg.colorSilent         || defaults.colorSilent         || Color.mSurfaceVariant
-    property color colorTx:             cfg.colorTx             || defaults.colorTx             || Color.mSecondary
-    property color colorRx:             cfg.colorRx             || defaults.colorRx             || Color.mPrimary
-    property color colorText:           cfg.colorText           || defaults.colorText           || Qt.alpha(Color.mOnSurfaceVariant, 0.3)
+    property bool useCustomColors: cfg.useCustomColors || defaults.useCustomColors
+    property bool showNumbers: cfg.showNumbers || defaults.showNumbers
+    property bool forceMegabytes: cfg.forceMegabytes || defaults.forceMegabytes
 
-    property int  byteThresholdActive:  cfg.byteThresholdActive || defaults.byteThresholdActive || 1024
-    property real fontSizeModifier:     cfg.fontSizeModifier    || defaults.fontSizeModifier    || 0.75
-    property real iconSizeModifier:     cfg.iconSizeModifier    || defaults.iconSizeModifier    || 1.0
-    property real spacingInbetween:     cfg.spacingInbetween    || defaults.spacingInbetween    || 1.0
+    property color colorSilent: root.useCustomColors && (cfg.colorSilent || defaults.colorSilent) || Color.mSurfaceVariant
+    property color colorTx: cfg.colorTx || defaults.colorTx || Color.mSecondary
+    property color colorRx: cfg.colorRx || defaults.colorRx || Color.mPrimary
+    property color colorText: cfg.colorText || defaults.colorText || Qt.alpha(Color.mOnSurfaceVariant, 0.3)
+
+    property int byteThresholdActive: cfg.byteThresholdActive || defaults.byteThresholdActive
+    property real fontSizeModifier: cfg.fontSizeModifier || defaults.fontSizeModifier
+    property real iconSizeModifier: cfg.iconSizeModifier || defaults.iconSizeModifier
+    property real spacingInbetween: cfg.spacingInbetween || defaults.spacingInbetween
 
     spacing: Style.marginL
 
     Component.onCompleted: {
-        Logger.i("NetworkIndicator", "Settings UI loaded")
+        Logger.i("NetworkIndicator", "Settings UI loaded");
     }
 
     function toIntOr(defaultValue, text) {
-        const v = parseInt(String(text).trim(), 10)
-        return isNaN(v) ? defaultValue : v
+        const v = parseInt(String(text).trim(), 10);
+        return isNaN(v) ? defaultValue : v;
     }
 
-    // ---------- Basic numeric settings ----------
+    NHeader {
+        label: "Network Indicator"
+        description: "Configure the Network Indicator plugin settings."
+    }
 
-    RowLayout {
-        Layout.fillWidth: true
-        spacing: Style.marginS
+    // ---------- General settings ----------
 
-        ColumnLayout {
-            Layout.fillWidth: true
-            spacing: Style.marginS
+    NComboBox {
+        label: "Icon Type"
+        description: "Choose the icon style used for the TX/RX indicators."
 
-            NTextInput {
-                Layout.fillWidth: true
-                description: "Minimum Widget Width"
-                placeholderText: String(root.minWidth)
-                text: String(root.minWidth)
-                onTextChanged: root.minWidth = root.toIntOr(0, text)
-            }
+        model: [
+            {
+                "key": "arrow",
+                "name": "arrow"
+            },
+            {
+                "key": "arrow-narrow",
+                "name": "arrow-narrow"
+            },
+            {
+                "key": "caret",
+                "name": "caret"
+            },
+            {
+                "key": "chevron",
+                "name": "chevron"
+            },
+        ]
 
-            NTextInput {
-                Layout.fillWidth: true
-                description: "Threshold in bytes to show as active"
-                placeholderText: root.byteThresholdActive + " bytes"
-                text: String(root.byteThresholdActive)
-                onTextChanged: root.byteThresholdActive = root.toIntOr(0, text)
+        currentKey: root.arrowType
+        onSelected: key => root.arrowType = key
+    }
+
+    NTextInput {
+        label: "Minimum Widget Width"
+        description: "Set a minimum width for the widget (in px)."
+        placeholderText: String(root.minWidth)
+        text: String(root.minWidth)
+        onTextChanged: root.minWidth = root.toIntOr(0, text)
+    }
+
+    NTextInput {
+        label: "Show Active Threshold"
+        description: "Set the activity threshold in bytes per second (B/s)."
+        placeholderText: root.byteThresholdActive + " bytes"
+        text: String(root.byteThresholdActive)
+        onTextChanged: root.byteThresholdActive = root.toIntOr(0, text)
+    }
+
+    NToggle {
+        label: "Show Values"
+        description: "Display the current RX/TX speeds as numbers."
+        checked: root.showNumbers
+        onToggled: function (checked) {
+            if (checked) {
+                root.showNumbers = true;
+            } else {
+                root.showNumbers = false;
             }
         }
     }
 
-    // ---------- Sliders: font/icon size + spacing ----------
+    NToggle {
+        label: "Force megabytes (MB)"
+        description: "Show all traffic values in MB instead of switching to KB for low usage."
+        checked: root.forceMegabytes
+        onToggled: function (checked) {
+            if (checked) {
+                root.forceMegabytes = true;
+            } else {
+                root.forceMegabytes = false;
+            }
+        }
+    }
 
-    RowLayout {
+    NDivider {
+        visible: true
         Layout.fillWidth: true
-        spacing: Style.marginS
+        Layout.topMargin: Style.marginL
+        Layout.bottomMargin: Style.marginL
+    }
 
-        // Font size modifier
-        ColumnLayout {
-            Layout.fillWidth: true
-            spacing: Style.marginS
+    // ---------- Slider ----------
 
-            Text {
-                text: ("Font size modifier: {value}")
-                      .replace("{value}", fontSizeModifierSlider.value.toFixed(2))
-                color: Color.mOnSurfaceVariant
-                font.pointSize: Style.fontSizeS
-                font.weight: Font.Bold
-            }
+    ColumnLayout {
+        spacing: Style.marginXXS
+        Layout.fillWidth: true
 
-            NSlider {
-                Layout.fillWidth: true
-                id: fontSizeModifierSlider
-                from: 0.5
-                to: 1.0
-                value: root.fontSizeModifier
-                stepSize: 0.05
-                onValueChanged: root.fontSizeModifier = value
-            }
+        NLabel {
+            label: "Vertical Spacing"
+            description: "Adjust the spacing between RX/TX elements."
         }
 
-        // Icon size modifier
-        ColumnLayout {
+        NValueSlider {
             Layout.fillWidth: true
-            spacing: Style.marginS
+            from: -5
+            to: 5
+            stepSize: 1
+            value: root.spacingInbetween
+            onMoved: value => root.spacingInbetween = value
+            text: root.spacingInbetween.toFixed(0)
+        }
+    }
 
-            Text {
-                text: ("Icon size modifier: {value}")
-                      .replace("{value}", iconSizeModifierSlider.value.toFixed(2))
-                color: Color.mOnSurfaceVariant
-                font.pointSize: Style.fontSizeS
-                font.weight: Font.Bold
-            }
+    ColumnLayout {
+        spacing: Style.marginXXS
+        Layout.fillWidth: true
 
-            NSlider {
-                Layout.fillWidth: true
-                id: iconSizeModifierSlider
-                from: 0.5
-                to: 1.25
-                value: root.iconSizeModifier
-                stepSize: 0.05
-                onValueChanged: root.iconSizeModifier = value
-            }
+        NLabel {
+            label: "Font Size Modifier"
+            description: "Scale the text size relative to the default."
         }
 
-        // Spacing between RX/TX
-        ColumnLayout {
+        NValueSlider {
             Layout.fillWidth: true
-            spacing: Style.marginS
-
-            Text {
-                text: ("Spacing inbetween RX/TX: {value}")
-                      .replace("{value}", spacingInbetweenSlider.value.toFixed(0))
-                color: Color.mOnSurfaceVariant
-                font.pointSize: Style.fontSizeS
-                font.weight: Font.Bold
-            }
-
-            NSlider {
-                Layout.fillWidth: true
-                id: spacingInbetweenSlider
-                from: -5
-                to: 5
-                value: root.spacingInbetween
-                stepSize: 1
-                onValueChanged: root.spacingInbetween = value
-            }
+            from: 0.5
+            to: 1.0
+            stepSize: 0.05
+            value: root.fontSizeModifier
+            onMoved: value => root.fontSizeModifier = value
+            text: fontSizeModifier.toFixed(2)
         }
+    }
+
+    ColumnLayout {
+        spacing: Style.marginXXS
+        Layout.fillWidth: true
+
+        NLabel {
+            label: "Icon Size Modifier"
+            description: "Scale the icon size relative to the default."
+        }
+
+        NValueSlider {
+            Layout.fillWidth: true
+            from: 0
+            to: 1.5
+            stepSize: 0.05
+            value: root.iconSizeModifier
+            onMoved: value => root.iconSizeModifier = value
+            text: root.iconSizeModifier.toFixed(2)
+        }
+    }
+
+    NDivider {
+        visible: true
+        Layout.fillWidth: true
+        Layout.topMargin: Style.marginL
+        Layout.bottomMargin: Style.marginL
     }
 
     // ---------- Color settings ----------
 
+    NToggle {
+        label: "Custom Colors"
+        description: "Enable custom colors instead of theme defaults."
+        checked: root.useCustomColors
+        onToggled: function (checked) {
+            if (checked) {
+                root.useCustomColors = true;
+            } else {
+                root.useCustomColors = false;
+            }
+        }
+    }
+
     ColumnLayout {
-        id: colorPanel
+        visible: root.useCustomColors
 
-        Layout.fillWidth: true
-        spacing: Style.marginS
-
-        NLabel {
-            label: "Coloring"
-        }
-
-        // TX / RX icon colors
         RowLayout {
-            spacing: Style.marginS
-
             NLabel {
-                Layout.fillWidth: true
-                label: "Icon TX".padStart(root.labelPadding, " ")
+                label: "TX Active"
+                description: "Set the upload (TX) icon color when above the threshold."
+                Layout.alignment: Qt.AlignTop
             }
 
             NColorPicker {
-                Layout.preferredWidth: Style.sliderWidth
-                Layout.preferredHeight: Style.baseWidgetSize
                 selectedColor: root.colorTx
-                onColorSelected: function (color) {
-                    root.colorTx = color
-                }
-            }
-
-            NLabel {
-                Layout.fillWidth: true
-                label: "Icon RX".padStart(root.labelPadding, " ")
-            }
-
-            NColorPicker {
-                Layout.preferredWidth: Style.sliderWidth
-                Layout.preferredHeight: Style.baseWidgetSize
-                selectedColor: root.colorRx
-                onColorSelected: function (color) {
-                    root.colorRx = color
-                }
+                onColorSelected: color => root.colorTx = color
             }
         }
 
-        // Inactive icon / value text colors
         RowLayout {
-            Layout.fillWidth: true
-            spacing: Style.marginS
-
             NLabel {
-                Layout.fillWidth: true
-                label: "Icons Inactive".padStart(root.labelPadding, " ")
+                label: "RX Active"
+                description: "Set the download (RX) icon color when above the threshold."
+                Layout.alignment: Qt.AlignTop
             }
 
             NColorPicker {
-                Layout.preferredWidth: Style.sliderWidth
-                Layout.preferredHeight: Style.baseWidgetSize
+                selectedColor: root.colorRx
+                onColorSelected: color => root.colorRx = color
+            }
+        }
+
+        RowLayout {
+            NLabel {
+                label: "RX/TX Inactive"
+                description: "Set the icon color when traffic is below the threshold."
+                Layout.alignment: Qt.AlignTop
+            }
+
+            NColorPicker {
                 selectedColor: root.colorSilent
-                onColorSelected: function (color) {
-                    root.colorSilent = color
-                }
+                onColorSelected: color => root.colorSilent = color
             }
+        }
 
+        RowLayout {
             NLabel {
-                Layout.fillWidth: true
-                label: "Values".padStart(root.labelPadding, " ")
+                label: "Text"
+                description: "Set the text color used for both RX and TX values."
+                Layout.alignment: Qt.AlignTop
             }
 
             NColorPicker {
-                Layout.preferredWidth: Style.sliderWidth
-                Layout.preferredHeight: Style.baseWidgetSize
                 selectedColor: root.colorText
-                onColorSelected: function (color) {
-                    root.colorText = color
-                }
+                onColorSelected: color => root.colorText = color
             }
         }
     }
 
-    // ---------- Icon type ----------
-
-    NComboBox {
-      Layout.fillWidth: true
-      label: "Icon type"
-      model: [
-        { "key": "arrow", "name": "arrow" },
-        { "key": "arrow-narrow", "name": "arrow-narrow" },
-        { "key": "caret", "name": "caret" },
-        { "key": "chevron", "name": "chevron" },
-      ]
-      currentKey: root.arrowType
-      onSelected: key => root.arrowType = key
-    }
+    // ---------- Saving ----------
 
     function saveSettings() {
         if (!pluginApi) {
-            Logger.e("NetworkIndicator", "Cannot save settings: pluginApi is null")
-            return
+            Logger.e("NetworkIndicator", "Cannot save settings: pluginApi is null");
+            return;
         }
 
-        pluginApi.pluginSettings.arrowType              = root.arrowType
+        Logger.e("NetworkIndicator", "{}", root.forceMegabytes);
 
-        pluginApi.pluginSettings.minWidth               = root.minWidth
-        pluginApi.pluginSettings.byteThresholdActive    = root.byteThresholdActive
-        pluginApi.pluginSettings.fontSizeModifier       = root.fontSizeModifier
-        pluginApi.pluginSettings.iconSizeModifier       = root.iconSizeModifier
-        pluginApi.pluginSettings.spacingInbetween       = root.spacingInbetween
+        pluginApi.pluginSettings.useCustomColors = root.useCustomColors;
+        pluginApi.pluginSettings.showNumbers = root.showNumbers;
+        pluginApi.pluginSettings.forceMegabytes = root.forceMegabytes;
 
-        pluginApi.pluginSettings.colorSilent            = root.colorSilent.toString()
-        pluginApi.pluginSettings.colorTx                = root.colorTx.toString()
-        pluginApi.pluginSettings.colorRx                = root.colorRx.toString()
-        pluginApi.pluginSettings.colorText              = root.colorText.toString()
+        pluginApi.pluginSettings.arrowType = root.arrowType;
+        pluginApi.pluginSettings.minWidth = root.minWidth;
+        pluginApi.pluginSettings.byteThresholdActive = root.byteThresholdActive;
+        pluginApi.pluginSettings.fontSizeModifier = root.fontSizeModifier;
+        pluginApi.pluginSettings.iconSizeModifier = root.iconSizeModifier;
+        pluginApi.pluginSettings.spacingInbetween = root.spacingInbetween;
 
-        pluginApi.saveSettings()
+        pluginApi.pluginSettings.colorSilent = root.colorSilent.toString();
+        pluginApi.pluginSettings.colorTx = root.colorTx.toString();
+        pluginApi.pluginSettings.colorRx = root.colorRx.toString();
+        pluginApi.pluginSettings.colorText = root.colorText.toString();
 
-        Logger.i("NetworkIndicator", "Settings saved successfully")
+        pluginApi.saveSettings();
+
+        Logger.i("NetworkIndicator", "Settings saved successfully");
     }
 }
