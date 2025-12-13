@@ -65,7 +65,10 @@ Item {
     }
 
     anchors.fill: parent
-    Component.onCompleted: updateContainers()
+    Component.onCompleted: {
+        updateContainers();
+        updateVolumes();
+    }
 
     Rectangle {
         id: panelContainer
@@ -497,14 +500,14 @@ Item {
             hoverEnabled: true
             onClicked: parent.clicked()
             onEntered: {
-                if (!parent.isSelected) {
+                if (!parent.isSelected)
                     parent.color = Qt.rgba(1, 1, 1, 0.05);
-                }
+
             }
             onExited: {
-                if (!parent.isSelected) {
+                if (!parent.isSelected)
                     parent.color = Color.transparent;
-                }
+
             }
         }
 
