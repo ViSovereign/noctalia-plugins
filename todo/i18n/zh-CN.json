@@ -45,7 +45,8 @@
     "todo_not_found": "ID为 ",
     "not_found_suffix": " 的待办事项未找到",
     "cleared_completed_todos": "清除了 ",
-    "completed_todos_suffix": " 个已完成的待办事项"
+    "completed_todos_suffix": " 个已完成的待办事项",
+    "removed_todo": "已删除待办事项"
   },
   "desktop_widget": {
     "header_title": "待办事项列表",

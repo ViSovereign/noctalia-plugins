@@ -45,7 +45,8 @@
     "todo_not_found": "Todo with ID ",
     "not_found_suffix": " not found",
     "cleared_completed_todos": "Cleared ",
-    "completed_todos_suffix": " completed todos"
+    "completed_todos_suffix": " completed todos",
+    "removed_todo": "Removed todo item"
   },
   "desktop_widget": {
     "header_title": "To-Do List",
