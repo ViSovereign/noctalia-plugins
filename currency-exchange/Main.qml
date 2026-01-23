@@ -49,14 +49,14 @@ Item {
             cachedRates = response.rates;
             loaded = true;
             lastFetch = Date.now();
-            Logger.i("CurrencyExchange", "Rates loaded:", Object.keys(cachedRates).length, "currencies");
+            Logger.i("CurrencyEx", "Rates loaded:", Object.keys(cachedRates).length, "currencies");
             ratesUpdated();
           }
         } catch (e) {
-          Logger.e("CurrencyExchange", "Failed to parse rates:", e);
+          Logger.e("CurrencyEx", "Failed to parse rates:", e);
         }
       } else {
-        Logger.e("CurrencyExchange", "Failed to fetch rates, exit code:", exitCode);
+        Logger.e("CurrencyEx", "Failed to fetch rates, exit code:", exitCode);
       }
     }
   }
@@ -76,7 +76,7 @@ Item {
     var retryMs = retryDelaySeconds * 1000;
 
     if (loading) return;
-    Logger.i("CurrencyExchange", "Loading rates");
+    Logger.i("CurrencyEx", "Loading rates");
     if (loaded && (now - lastFetch) < cacheMs) return;
     // Don't auto-retry too soon after a failed attempt (unless forced)
     if (!forceRetry && !loaded && lastFetchAttempt > 0 && (now - lastFetchAttempt) < retryMs) return;
