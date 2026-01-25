@@ -96,10 +96,8 @@ Rectangle {
     ]
 
     onTriggered: action => {
-      var popupMenuWindow = PanelService.getPopupMenuWindow(screen)
-      if (popupMenuWindow) {
-        popupMenuWindow.close()
-      }
+      contextMenu.close()
+      PanelService.closeContextMenu(screen)
 
       if (action === "widget-settings") {
         BarService.openPluginSettings(screen, pluginApi.manifest)
@@ -132,11 +130,7 @@ Rectangle {
           pluginApi.openPanel(root.screen, root)
         }
       } else if (mouse.button === Qt.RightButton) {
-        var popupMenuWindow = PanelService.getPopupMenuWindow(screen)
-        if (popupMenuWindow) {
-          popupMenuWindow.showContextMenu(contextMenu)
-          contextMenu.openAtItem(root, screen)
-        }
+        PanelService.showContextMenu(contextMenu, root, screen)
       }
     }
   }

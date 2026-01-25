@@ -174,10 +174,8 @@ Rectangle {
     }
 
     onTriggered: action => {
-      var popupMenuWindow = PanelService.getPopupMenuWindow(screen);
-      if (popupMenuWindow) {
-        popupMenuWindow.close();
-      }
+      contextMenu.close();
+      PanelService.closeContextMenu(screen);
 
       if (mainInstance) {
         if (action === "play-pause") {
@@ -198,11 +196,7 @@ Rectangle {
 
     onClicked: (mouse) => {
       if (mouse.button === Qt.RightButton) {
-        var popupMenuWindow = PanelService.getPopupMenuWindow(screen);
-        if (popupMenuWindow) {
-          popupMenuWindow.showContextMenu(contextMenu);
-          contextMenu.openAtItem(root, screen);
-        }
+        PanelService.showContextMenu(contextMenu, root, screen);
       }
     }
   }
