@@ -142,7 +142,7 @@ function buildSunriseSunset() {
     var rise = riseDate.toLocaleTimeString(undefined, options);
     var set  = setDate.toLocaleTimeString(undefined, options);
 
-    var tooltip = `Sunrise: ${rise}\nSunset : ${set}`
+    var tooltip = `Sunrise: ${rise}\nSunset: ${set}`
     return tooltip;
 }
 
